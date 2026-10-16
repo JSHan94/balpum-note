@@ -1,53 +1,116 @@
 'use strict';
-const KEY='balpum-notes-v1';
-const seed=[
-{id:'guui-dongseo',name:'구의 동서화운트빌 (52-20)',area:'광진구 · 구의동',address:'서울 광진구 자양로43길 32',type:'구축 빌라',price:6.2,size:68.54,year:2011,rooms:3,parking:.8,elevator:true,lat:37.552121,lng:127.090669,focus:'대장상 68.54㎡ 호실 확인 · 주차 8대 · 아차산역 상권 소음',article:'2651070684'},
-{id:'gunja-dongsan',name:'군자 동산골든빌라',area:'광진구 · 군자동',address:'서울 광진구 동일로52길 11-5',type:'구축 빌라',price:6,size:77.42,year:2003,rooms:3,parking:1,elevator:false,lat:37.5549,lng:127.071925,focus:'거실·방 크기 실측 · 4층 계단 · 평일 도곡 통근',article:'2652031145'},
-{id:'ogeum-jeongho',name:'오금 정호하이츠빌라',area:'송파구 · 오금동',address:'서울 송파구 마천로26길 9',type:'구축 빌라',price:4.5,size:78.96,year:1996,rooms:3,parking:.93,elevator:false,lat:37.502252,lng:127.138977,focus:'5층 옥상 방수 · 1층 상가 · 밤 주차 · 구의 통근',article:'2652433879'},
-{id:'songjeong-rian',name:'송정 리안빌리지',area:'성동구 · 송정동',address:'서울 성동구 동일로43길 19',type:'구축 빌라',price:6.3,size:85.35,year:2008,rooms:3,parking:1.3,elevator:false,lat:37.555012,lng:127.069756,focus:'테라스 합법 여부 · 저지대 침수 · 중랑천 습기',article:'2651787466'},
-{id:'guui-samsung',name:'구의 삼성하이빌B',area:'광진구 · 구의동',address:'서울 광진구 영화사로15길 14',type:'구축 빌라',price:5.5,size:68.48,year:2003,rooms:3,parking:1,elevator:false,lat:37.554857,lng:127.094691,focus:'오르막 · 올수리 품질 · 주차 방식',article:'2650784122'},
-{id:'garak-hangyeol',name:'가락 한결주택',area:'송파구 · 가락동',address:'서울 송파구 동남로20길 50-24',type:'구축 빌라',price:5.9,size:74.59,year:2003,rooms:3,parking:1.5,elevator:false,lat:37.4932,lng:127.135696,focus:'꼭대기층 누수 · 주차 배치 · 개롱역 도보',article:'2651039257'},
-{id:'bangi-seongyeong',name:'방이 선경베르빌',area:'송파구 · 방이동',address:'서울 송파구 올림픽로32길 50-14',type:'구축 빌라',price:6.2,size:59.83,year:2007,rooms:3,parking:1,elevator:false,lat:37.512026,lng:127.111227,focus:'방3 크기 · 일렬주차 · 세입자 2027.6 퇴거',article:'2651016446'},
-{id:'junggok-147',name:'중곡동 147-67 빌라',area:'광진구 · 중곡동',address:'서울 광진구 중곡동 147-67',type:'구축 빌라',price:7,size:100.64,year:1995,rooms:4,parking:.88,elevator:false,lat:37.561053,lng:127.090064,focus:'꼭대기 누수 · E4구역 근거 · 수리비 포함 8억',article:'2651596275'}
+
+const STORAGE_KEY = 'balpum-checklist-v2';
+const sections = [
+  { id: 'before', title: '가기 전', items: [
+    ['register', '건축물대장에서 전용면적·위반 여부 확인'],
+    ['land', '토지이음에서 정비구역·모아타운 확인'],
+    ['trade', '같은 건물 실거래가 확인'],
+    ['floorplan', '평면도·입주 가능일 미리 확인'],
+    ['tools', '줄자와 손전등 챙기기']
+  ]},
+  { id: 'neighborhood', title: '동네', items: [
+    ['station', '역까지 직접 걸어보기'],
+    ['hill', '골목 경사와 계단 확인'],
+    ['noiseout', '대로·상가·오토바이 소음 듣기'],
+    ['light', '채광을 가리는 앞 건물 확인'],
+    ['amenity', '마트·병원·공원 접근성 확인'],
+    ['flood', '저지대·침수 위험 확인']
+  ]},
+  { id: 'building', title: '건물·주차', items: [
+    ['parking', '내 차가 실제로 주차 가능한지 확인'],
+    ['doublepark', '이중주차·선착순 배정 여부 확인'],
+    ['elevator', '승강기 또는 계단 이동 부담 확인'],
+    ['wall', '외벽 균열·누수 자국 확인'],
+    ['roof', '꼭대기층이라면 옥상 방수 상태 확인'],
+    ['common', '계단·현관·쓰레기장 관리 상태 확인'],
+    ['shop', '1층 상가의 소음·냄새 확인']
+  ]},
+  { id: 'space', title: '실내 공간', items: [
+    ['living', '거실 폭과 깊이 재보기'],
+    ['rooms', '방 3개에 필요한 가구가 들어가는지 재보기'],
+    ['layout', '복도 등 버려지는 공간 확인'],
+    ['sun', '창 방향과 실제 햇빛 확인'],
+    ['air', '앞뒤 창으로 맞통풍이 되는지 확인'],
+    ['balcony', '발코니 확장 여부 확인'],
+    ['structure', '철거하려는 벽이 내력벽인지 확인']
+  ]},
+  { id: 'condition', title: '하자·수리', items: [
+    ['mold', '창틀·벽 모서리 곰팡이와 결로 확인'],
+    ['leak', '천장·벽의 누수 흔적 확인'],
+    ['water', '수압·배수·하수구 냄새 확인'],
+    ['window', '창호 상태와 외풍 확인'],
+    ['boiler', '보일러·배관 연식 확인'],
+    ['electric', '차단기·콘센트 상태 확인'],
+    ['sound', '층간·벽간 소음 듣기'],
+    ['estimate', '수리 견적 2곳 이상 받아보기']
+  ]},
+  { id: 'contract', title: '관리·계약', items: [
+    ['fee', '관리비와 공용 수리비 분담 확인'],
+    ['repair', '옥상·외벽·배관 공사 이력 확인'],
+    ['tenant', '세입자·보증금·입주일 확인'],
+    ['defect', '누수·하자 이력과 계약 특약 확인'],
+    ['violation', '불법 확장·이행강제금 여부 확인'],
+    ['registry', '계약 전 등기부의 근저당·대지권 확인']
+  ]},
+  { id: 'revisit', title: '다시 확인', items: [
+    ['evening', '평일 저녁 주차·소음 다시 보기'],
+    ['guui', '평일 8시 구의역까지 40분 이내인지 확인'],
+    ['dogok', '평일 8시 도곡역까지 40분 이내인지 확인'],
+    ['rain', '비 오는 날 누수·배수 확인'],
+    ['winter', '겨울 결로·외풍 확인']
+  ]}
 ];
-const groups=[
-['가기 전 · 서류',[['ledger','건축물대장: 호실별 전용면적·위반 여부·주차·허가일'],['land','토지이음: 정비구역·모아타운·지구단위 경계'],['trades','같은 건물 실거래와 목표가 확인'],['title','계약 전 등기부: 근저당·압류·대지권·신탁'],['plan','평면도·관리비·입주일 미리 요청']]],
-['동네 · 접근성',[['walk','역까지 실제 걸리는 시간 측정'],['slope','경사·계단·짐 옮길 동선 확인'],['noise','대로·유흥가·오토바이·학교 소음 확인'],['night','저녁 골목 조명·치안 재확인'],['amenity','마트·병원·공원 거리 확인'],['flood','저지대 침수 이력·인근 철거 공사 확인']]],
-['건물 · 공용부',[['wall','외벽 균열·백화·누수 자국'],['roof','계단 천장 물자국·옥상 방수(최상층)'],['parking','주차 대수·배치·이중주차·내 차 진입'],['parkingnight','평일 저녁 주차 만차 여부'],['lift','승강기·점검표 또는 계단·자재 반입 폭'],['common','우편함·현관·분리수거 관리 상태'],['shop','1층 상가 업종·냄새·소음'],['basement','지하층 습기·하수 냄새']]],
-['집 안 · 공간과 구조',[['living','거실 폭·깊이 줄자로 실측'],['rooms','방 3개 각각 크기와 가구 배치 실측'],['shape','직사각형 평면·죽은 공간 비율'],['sun','향·채광·앞 건물과 거리'],['air','앞뒤 창문 맞통풍 여부'],['balcony','발코니 확장·단열·대장 일치'],['ceiling','층고·보 위치']]],
-['집 안 · 상태와 수리',[['mold','창틀·붙박이장 뒤·북쪽 모서리 결로·곰팡이'],['leak','천장·벽 누수 얼룩(최상층 옥상 포함)'],['water','수압·배수·변기·하수구 냄새'],['windows','샷시 단창/이중창·외풍·교체 비용'],['boiler','보일러 연식·분배기·배관'],['electric','차단기 용량·콘센트·에어컨 배관'],['sound','층간·벽간 소음'],['structure','허물고 싶은 벽의 내력벽 여부(도면 확인)'],['bath','욕실·배관 위치와 이동 가능성']]],
-['관리 · 계약 질문',[['fee','관리비·공용전기·장기수선 적립'],['repair','옥상·외벽·배관 공사 이력과 분담'],['quote','리모델링 견적 2곳 이상'],['seller','매도 사유·매도 시한·가격 조정'],['tenant','입주일·세입자·보증금·잔금 일정'],['defect','누수·하자 이력과 특약'],['illegal','확장·위반·이행강제금 이력'],['renewal','재개발 동의·구역 경계·권리산정기준일'],['allocation','주차 지정/선착순 배정 방식']]],
-['통근 · 재방문',[['commuteguui','평일 08시 구의역까지 40분 이내 실측'],['commutedogok','평일 08시 도곡역까지 40분 이내 실측'],['evening','평일 19~21시 소음·주차 재방문'],['rain','비 오는 날 누수·배수 재방문'],['winter','겨울 결로·외풍 재방문']]]
-];
-const weights=[['space','공간',30],['layout','구조',20],['location','입지',20],['parking','주차 · 승강기',10],['condition','상태 · 수리 부담',10],['value','가격',10]];
-const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let state, selected=null, tab='check', userLoc=null, toastTimer, saveTimer;
-function fresh(){return {version:1,properties:seed.map(x=>({...x,check:{},record:{},score:{},createdAt:new Date().toISOString()}))};}
-try{let saved=JSON.parse(localStorage.getItem(KEY));state=saved&&Array.isArray(saved.properties)?saved:fresh()}catch{state=fresh()}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(state));$('#savedStatus').textContent='✓ 이 브라우저에 자동 저장됨'}catch{showToast('저장 공간이 부족하거나 차단됐어요. 백업을 내려받아 주세요.')}}
-function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(save,180)}
-function showToast(msg){let el=$('#toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3500)}
-function getP(){return state.properties.find(x=>x.id===selected)}
-function progress(p){let total=groups.reduce((n,g)=>n+g[1].length,0),done=Object.values(p.check||{}).filter(Boolean).length;return {done,total,pct:Math.round(done/total*100)}}
-function totalScore(p){return weights.reduce((n,[id])=>n+Number(p.score?.[id]||0),0)}
-function distance(a,b,c,d){let r=Math.PI/180,x=(c-a)*r,y=(d-b)*r,z=Math.sin(x/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)**2;return 6371*2*Math.atan2(Math.sqrt(z),Math.sqrt(1-z))}
-function dist(p){return userLoc&&Number.isFinite(+p.lat)&&Number.isFinite(+p.lng)?distance(userLoc.lat,userLoc.lng,+p.lat,+p.lng):Infinity}
-function mapURL(p){return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(p.address||(p.lat&&p.lng?`${p.lat},${p.lng}`:p.name))}
-function routeURL(p){return 'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(p.address||`${p.lat},${p.lng}`)+'&travelmode=transit'}
-function render(){let props=[...state.properties],sort=$('#sortSelect').value;if(sort==='distance'&&userLoc)props.sort((a,b)=>dist(a)-dist(b));else if(sort==='progress')props.sort((a,b)=>progress(b).pct-progress(a).pct);else if(sort==='name')props.sort((a,b)=>a.name.localeCompare(b.name,'ko'));
-$('#propertyList').innerHTML=props.map(p=>`<button class="side-item" data-id="${esc(p.id)}"><i class="side-dot"></i><span>${esc(p.name)}<small>${esc(p.area||'내가 추가한 매물')}</small></span></button>`).join('');
-$('#stats').innerHTML=[['기록한 집',`${props.length}곳`,'⌂'],['현장 방문',`${props.filter(x=>x.record?.visited).length}곳`,'◷'],['70점 이상',`${props.filter(x=>totalScore(x)>=70).length}곳`,'★'],['완료한 항목',`${props.reduce((a,p)=>a+progress(p).done,0)}개`,'✓']].map(([label,value,icon])=>`<div class="stat"><div><small>${label}</small><strong>${value}</strong></div><span class="stat-icon">${icon}</span></div>`).join('');
-$('#cards').innerHTML=props.length?props.map(p=>{let pr=progress(p),d=dist(p);return `<article class="card"><div class="card-top"><span class="pill ${p.type==='아파트'?'secondary':''}">${esc(p.type||'매물')}</span><span class="card-distance">${Number.isFinite(d)?`◎ 직선 ${d<1?Math.round(d*1000)+'m':d.toFixed(1)+'km'}`:p.record?.visited?'✓ 방문 기록':' '}</span></div><h3>${esc(p.name)}</h3><p class="address">${esc(p.address||p.area||'주소 미입력')}</p><div class="card-meta"><span><b>${p.price?esc(p.price)+'억':'가격 미정'}</b> 매매</span><span><b>${p.size?esc(p.size)+'㎡':'면적 미정'}</b> 전용</span><span>${p.elevator?'승강기 있음':p.year?`${esc(p.year)}년 · 승강기 없음`:esc(p.type||'')}</span></div><p class="focus">${esc(p.focus||'현장에서 확인할 점을 적어주세요')}</p><div class="card-bottom"><div class="progress"><span class="bar"><i style="width:${pr.pct}%"></i></span>${pr.pct}% ${totalScore(p)?'· '+totalScore(p)+'점':''}</div><div class="card-actions"><a class="map-link" target="_blank" rel="noopener noreferrer" href="${mapURL(p)}" aria-label="${esc(p.name)} 지도 보기">지도 ↗</a><button class="open-card" data-id="${esc(p.id)}">기록 열기 →</button></div></div></article>`}).join(''):'<div class="empty-state">아직 기록이 없어요. 첫 임장 기록을 만들어 보세요.</div>';
-$('#locationStatus').textContent=userLoc?`현재 위치 기준 · 정확도 약 ${Math.round(userLoc.accuracy)}m`:'위치를 켜면 가까운 순으로 볼 수 있어요';}
-function openDetail(id){selected=id;tab='check';renderDetail();$('#detailDialog').showModal();$('#breadcrumbName').textContent=getP()?.name||'임장 기록';$('.sidebar').classList.remove('open')}
-function renderDetail(){let p=getP();if(!p)return;$('#detailTitle').textContent=p.name;$('#detailAddress').textContent=p.address||'주소를 현장에서 입력하세요';$('#detailArea').textContent=p.area||p.type||'나의 매물';document.querySelectorAll('.detail-tabs button').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));$('#detailBody').innerHTML=tab==='check'?checkHTML(p):tab==='record'?recordHTML(p):scoreHTML(p);$('#savedStatus').textContent='✓ 이 브라우저에 자동 저장됨'}
-function checkHTML(p){let pr=progress(p);return `<div class="progress-summary"><span>체크한 항목 <strong>${pr.done} / ${pr.total}</strong></span><span>${pr.pct}% 완료</span></div>`+groups.map(([heading,items])=>`<section class="check-group"><h3>${esc(heading)}</h3>${items.map(([id,text])=>`<label class="check-item"><input type="checkbox" data-check="${id}" ${p.check?.[id]?'checked':''}><span>${esc(text)}</span></label>`).join('')}</section>`).join('')}
-function recordHTML(p){let r=p.record||{}, field=(label,key,placeholder='',type='text')=>`<div class="field"><label for="rec-${key}">${label}</label><input id="rec-${key}" data-record="${key}" type="${type}" value="${esc(r[key]||'')}" placeholder="${placeholder}"></div>`;return `<div class="record-grid">${field('방문 날짜','date','','date')}${field('방문 시간 · 날씨','weather','예: 토요일 14:00, 맑음')}${field('실제 거실 폭 (m)','livingWidth','예: 4.1','number')}${field('주차 여유 / 배정 방식','parkingMemo','예: 밤 8시 만차, 일렬 주차')}${field('구의역 통근 (분)','commuteGuui','평일 08시 출발','number')}${field('도곡역 통근 (분)','commuteDogok','평일 08시 출발','number')}${field('매매가 (억원)','observedPrice','현장 협상가','number')}${field('리모델링 견적 (만원)','remodelCost','예: 7000','number')}<div class="field wide"><label for="rec-notes">현장 메모</label><textarea id="rec-notes" rows="6" data-record="notes" placeholder="방 크기, 채광, 냄새, 소음, 중개사 답변 등을 자유롭게 기록하세요">${esc(r.notes||'')}</textarea></div><div class="field wide"><label><input type="checkbox" data-record-check="visited" ${r.visited?'checked':''}> 현장 방문 완료로 표시</label></div></div><div class="location-panel"><button class="small-btn" data-action="pin">◎ 지금 위치를 이 집으로 저장</button><p>${p.lat&&p.lng?`저장된 좌표: ${Number(p.lat).toFixed(5)}, ${Number(p.lng).toFixed(5)}`:'아직 위치가 없어요. 현장에서 저장하세요.'}</p><a class="map-link" target="_blank" rel="noopener noreferrer" href="${mapURL(p)}">지도 보기 ↗</a><a class="map-link" target="_blank" rel="noopener noreferrer" href="${routeURL(p)}">대중교통 길찾기 ↗</a></div><p class="field-hint">위치는 이 브라우저에만 저장됩니다. 거리 표시는 직선거리이며 이동 시간이 아닙니다. 위치 권한을 거부해도 주소와 메모는 사용할 수 있어요.</p>`}
-function scoreHTML(p){let total=totalScore(p),advice=total>=80?'계약 검토 후보. 서류와 견적을 확인하세요.':total>=70?'평일 저녁·비 오는 날 다시 방문하세요.':'70점 미만이면 다른 후보와 비교해 보세요.';return `<div class="score-total"><span>나의 현장 점수<small style="display:block;margin-top:5px">100점 만점 · 직접 조정</small></span><strong id="scoreTotal">${total}점</strong></div><p class="score-note" id="scoreAdvice">${advice}</p>${weights.map(([id,label,max])=>`<div class="score-row"><div class="score-label"><span>${label}</span><span id="score-${id}">${Number(p.score?.[id]||0)} / ${max}</span></div><input type="range" min="0" max="${max}" step="1" value="${Number(p.score?.[id]||0)}" data-score="${id}" aria-label="${label} 점수"></div>`).join('')}<div class="field" style="margin-top:25px"><label>최종 판단</label><textarea data-record="decision" rows="3" placeholder="좋았던 점, 가격 협상 목표, 보류 이유">${esc(p.record?.decision||'')}</textarea></div>`}
-function locate(cb){if(!navigator.geolocation){showToast('이 브라우저는 위치 조회를 지원하지 않아요.');return}$('#locationStatus').textContent='위치를 확인하는 중…';navigator.geolocation.getCurrentPosition(pos=>{userLoc={lat:pos.coords.latitude,lng:pos.coords.longitude,accuracy:pos.coords.accuracy};render();cb?.(userLoc);showToast(`위치를 확인했어요. 정확도 약 ${Math.round(userLoc.accuracy)}m`)},err=>{render();showToast(err.code===1?'위치 권한이 거부됐어요. 브라우저 설정에서 허용해 주세요.':'현재 위치를 가져올 수 없어요. 잠시 후 다시 시도해 주세요.')},{enableHighAccuracy:true,timeout:12000,maximumAge:60000})}
-function download(){let blob=new Blob([JSON.stringify({...state,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='발품노트-임장기록-'+new Date().toISOString().slice(0,10)+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);showToast('백업 파일을 내려받았어요.')}
-function init(){render();$('#locateBtn').addEventListener('click',()=>locate());$('#sortSelect').addEventListener('change',render);$('#cards').addEventListener('click',e=>{let b=e.target.closest('.open-card');if(b)openDetail(b.dataset.id)});$('#propertyList').addEventListener('click',e=>{let b=e.target.closest('.side-item');if(b)openDetail(b.dataset.id)});['addPropertySide','addPropertyHero'].forEach(id=>$('#'+id).onclick=()=>$('#addDialog').showModal());$('#closeAdd').onclick=()=>$('#addDialog').close();$('#closeDetail').onclick=()=>$('#detailDialog').close();$('#closePlan').onclick=()=>$('#planDialog').close();$('#planBtn').onclick=()=>$('#planDialog').showModal();$('#menuBtn').onclick=()=>$('.sidebar').classList.toggle('open');$('#detailDialog').addEventListener('close',()=>{$('#breadcrumbName').textContent='임장 기록';render()});document.querySelectorAll('dialog').forEach(d=>d.addEventListener('click',e=>{if(e.target===d)d.close()}));
-$('#addForm').addEventListener('submit',e=>{e.preventDefault();let f=new FormData(e.target),name=String(f.get('name')||'').trim();if(!name)return;let p={id:'custom-'+crypto.randomUUID(),name,address:String(f.get('address')||'').trim(),area:String(f.get('area')||'').trim(),type:String(f.get('type')||'기타'),price:Number(f.get('price'))||null,size:Number(f.get('size'))||null,focus:String(f.get('focus')||'').trim(),check:{},record:{},score:{},createdAt:new Date().toISOString()};state.properties.unshift(p);save();render();e.target.reset();$('#addDialog').close();openDetail(p.id);showToast('새 임장 기록을 만들었어요.')});
-$('#detailBody').addEventListener('change',e=>{let p=getP();if(!p)return;let t=e.target;if(t.dataset.check){p.check[t.dataset.check]=t.checked;scheduleSave();let y=$('#detailBody').scrollTop;renderDetail();$('#detailBody').scrollTop=y;render()}else if(t.dataset.recordCheck){p.record[t.dataset.recordCheck]=t.checked;scheduleSave();render()}else if(t.dataset.record){p.record[t.dataset.record]=t.value;scheduleSave()}});
-$('#detailBody').addEventListener('input',e=>{let p=getP();if(!p)return;let t=e.target;if(t.dataset.score){p.score[t.dataset.score]=Number(t.value);$('#score-'+t.dataset.score).textContent=`${t.value} / ${weights.find(w=>w[0]===t.dataset.score)[2]}`;let n=totalScore(p);$('#scoreTotal').textContent=n+'점';$('#scoreAdvice').textContent=n>=80?'계약 검토 후보. 서류와 견적을 확인하세요.':n>=70?'평일 저녁·비 오는 날 다시 방문하세요.':'70점 미만이면 다른 후보와 비교해 보세요.';scheduleSave();render()}else if(t.dataset.record){p.record[t.dataset.record]=t.value;scheduleSave()}});
-$('#detailBody').addEventListener('click',e=>{if(e.target.dataset.action==='pin')locate(v=>{let p=getP();if(!p)return;p.lat=v.lat;p.lng=v.lng;p.record.locationAccuracy=Math.round(v.accuracy);p.record.locationSavedAt=new Date().toISOString();save();renderDetail();render()})});document.querySelectorAll('.detail-tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;renderDetail()});$('#deleteProperty').onclick=()=>{let p=getP();if(!p||!confirm(`“${p.name}” 기록을 삭제할까요? 체크와 메모도 지워집니다.`))return;state.properties=state.properties.filter(x=>x.id!==selected);save();$('#detailDialog').close();showToast('기록을 삭제했어요.')};['exportBtn','footerExport'].forEach(id=>$('#'+id).onclick=download);$('#importBtn').onclick=()=>$('#importFile').click();$('#importFile').addEventListener('change',async e=>{let file=e.target.files?.[0];if(!file)return;try{let d=JSON.parse(await file.text());if(!Array.isArray(d.properties)||d.properties.some(p=>!p.id||!p.name)||!confirm(`백업의 ${d.properties.length}개 기록으로 현재 기록을 덮어쓸까요?`))return;state={version:1,properties:d.properties.map(p=>({...p,check:p.check||{},record:p.record||{},score:p.score||{}}))};save();render();showToast('백업을 가져왔어요.')}catch{showToast('올바른 발품 노트 백업 파일이 아니에요.')}finally{e.target.value=''}})}init();
+
+const allIds = new Set(sections.flatMap(section => section.items.map(([id]) => id)));
+let checked;
+try {
+  const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  checked = new Set(Array.isArray(stored) ? stored.filter(id => allIds.has(id)) : []);
+} catch {
+  checked = new Set();
+}
+
+const list = document.getElementById('checklist');
+const progressText = document.getElementById('progressText');
+const progressBar = document.getElementById('progressBar');
+const resetButton = document.getElementById('resetButton');
+
+function render() {
+  list.innerHTML = sections.map((section, index) => {
+    const done = section.items.filter(([id]) => checked.has(id)).length;
+    return `<section class="check-section" id="section-${index + 1}" aria-labelledby="heading-${section.id}">
+      <div class="check-section-header"><h2 id="heading-${section.id}">${section.title}</h2><span class="section-count">${done} / ${section.items.length}</span></div>
+      <ul class="check-list">${section.items.map(([id, label]) => `
+        <li><label class="check-row${checked.has(id) ? ' is-checked' : ''}">
+          <input class="check-box" type="checkbox" value="${id}" ${checked.has(id) ? 'checked' : ''}>
+          <span class="check-label">${label}</span>
+        </label></li>`).join('')}</ul>
+    </section>`;
+  }).join('');
+  const count = checked.size;
+  progressText.textContent = `${count} / ${allIds.size} 완료`;
+  progressBar.style.width = `${Math.round(count / allIds.size * 100)}%`;
+  progressBar.parentElement.setAttribute('aria-valuenow', String(count));
+  progressBar.parentElement.setAttribute('aria-valuemax', String(allIds.size));
+}
+
+list.addEventListener('change', event => {
+  const input = event.target;
+  if (!(input instanceof HTMLInputElement) || !allIds.has(input.value)) return;
+  if (input.checked) checked.add(input.value);
+  else checked.delete(input.value);
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify([...checked])); }
+  catch { /* 저장이 차단돼도 현재 페이지의 체크는 사용할 수 있습니다. */ }
+  render();
+});
+
+resetButton.addEventListener('click', () => {
+  if (!checked.size) return;
+  if (!window.confirm('모든 체크를 지울까요?')) return;
+  checked.clear();
+  try { localStorage.removeItem(STORAGE_KEY); } catch {}
+  render();
+});
+
+render();

@@ -1,9 +1,62 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#173c36"><meta name="description" content="내 집 찾기 임장 기록. 매물별 체크리스트, 점수, 위치, 메모를 브라우저에 저장합니다."><title>발품 노트 | 임장 체크리스트</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="style.css"></head><body>
-<div class="app-shell"><aside class="sidebar"><div class="brand"><span class="brand-mark">⌂</span><span>발품 노트<small>서울 동부 실거주 집 찾기</small></span></div><div class="side-label">나의 임장</div><div id="propertyList" class="property-list"></div><button class="add-btn" id="addPropertySide">＋ 새 매물 기록</button><div class="side-bottom"><div class="privacy-card"><span class="privacy-icon">◈</span><strong>내 기록은 내 브라우저에</strong><p>계정 없이 자동 저장돼요. 다른 기기와 동기화되지 않으니 백업을 내려받아 주세요.</p></div><button class="text-btn" id="exportBtn">↧ 백업 내보내기</button><button class="text-btn" id="importBtn">↥ 백업 가져오기</button><input id="importFile" type="file" accept=".json,application/json" hidden></div></aside>
-<main class="main"><header class="topbar"><button class="mobile-menu" id="menuBtn" aria-label="매물 목록 열기">☰</button><div class="top-breadcrumb">MY FIELD NOTES <span>/</span> <span id="breadcrumbName">임장 기록</span></div><div class="top-actions"><button id="locateBtn" class="location-btn">◎ 내 위치 조회</button><span class="avatar">집</span></div></header>
-<div class="content"><section class="hero"><div class="hero-eyebrow">FIELD VISIT PLANNER <span>·</span> 2026</div><h1>좋은 집은<br><em>직접 걸어봐야</em> 보입니다.</h1><p>동네부터 방 안 구석까지. 이름을 붙여 기록하고, 내 기준으로 비교하세요.</p><div class="hero-actions"><button class="primary" id="addPropertyHero">＋ 새 임장 기록</button><button class="ghost" id="planBtn">임장 계획 보기 ↗</button></div><div class="hero-decoration" aria-hidden="true"><div class="hero-ring ring1"></div><div class="hero-ring ring2"></div><div class="hero-pin">⌖</div></div></section>
-<div class="stats" id="stats"></div><div class="section-heading"><div><div class="eyebrow">YOUR SHORTLIST</div><h2>둘러볼 집</h2></div><div class="list-controls"><span id="locationStatus">위치를 켜면 가까운 순으로 볼 수 있어요</span><select id="sortSelect" aria-label="매물 정렬"><option value="priority">추천 순</option><option value="distance">가까운 순</option><option value="progress">진행률 순</option><option value="name">이름 순</option></select></div></div><div id="cards" class="cards"></div><footer>발품 노트 · 데이터는 현재 브라우저에만 저장됩니다. <button id="footerExport">백업하기 ↗</button></footer></div></main></div>
-<dialog id="detailDialog" class="detail-dialog"><div class="detail-wrap"><div class="detail-head"><div><div class="eyebrow" id="detailArea"></div><h2 id="detailTitle"></h2><p id="detailAddress"></p></div><button class="icon-close" id="closeDetail" aria-label="닫기">×</button></div><div class="detail-tabs" role="tablist"><button data-tab="check" class="active">체크리스트</button><button data-tab="record">현장 기록</button><button data-tab="score">점수 · 판단</button></div><div class="detail-body" id="detailBody"></div><div class="detail-foot"><span id="savedStatus">자동 저장</span><button class="quiet-danger" id="deleteProperty">이 기록 삭제</button></div></div></dialog>
-<dialog id="addDialog" class="add-dialog"><form id="addForm"><div class="modal-head"><div><div class="eyebrow">NEW FIELD NOTE</div><h2>새 집 기록하기</h2></div><button type="button" class="icon-close" id="closeAdd" aria-label="닫기">×</button></div><label>매물 이름 <span>*</span><input name="name" placeholder="예: 방이동 햇살빌라 301호" maxlength="80" required></label><label>주소<input name="address" placeholder="예: 서울 송파구 방이동 101-5" maxlength="150"></label><div class="form-row"><label>지역<input name="area" placeholder="방이동" maxlength="40"></label><label>주거 형태<select name="type"><option>구축 빌라</option><option>준신축 빌라</option><option>아파트</option><option>연립</option><option>기타</option></select></label></div><div class="form-row"><label>매매가 (억원)<input name="price" type="number" min="0" step="0.01" placeholder="6.2"></label><label>전용면적 (㎡)<input name="size" type="number" min="0" step="0.01" placeholder="68.5"></label></div><label>특히 볼 것<textarea name="focus" rows="2" placeholder="예: 주차, 결로, 구조 변경 가능 여부"></textarea></label><button class="primary full" type="submit">기록 만들기</button></form></dialog>
-<dialog id="planDialog" class="plan-dialog"><div class="modal-head"><div><div class="eyebrow">FIELD GUIDE</div><h2>내 임장 계획</h2></div><button class="icon-close" id="closePlan" aria-label="닫기">×</button></div><div class="plan-content"><div class="plan-block"><span class="plan-index">01 / 기준</span><h3>넓고 구조 좋은 집, 입지는 우선</h3><p>전용 59㎡ 이상 · 방 3개 이상 · 매매 + 수리 8억 이하 · 차 1대 주차. 승강기와 재개발은 가점. 반지하, 위반건축물, 근생 호수는 제외.</p></div><div class="plan-block"><span class="plan-index">02 / 지역</span><h3>방이 → 자양 → 군자·능동</h3><p>구의·오금·가락·송정도 함께 비교. 구축 빌라와 준신축 빌라, 작은 아파트를 같은 날 보고 공간과 가격의 차이를 체감하세요.</p></div><div class="plan-block"><span class="plan-index">03 / 시간</span><h3>낮에 보고, 저녁과 비 오는 날 다시</h3><p>첫 방문은 주말 낮 채광. 상위 후보는 평일 19~21시 주차·소음, 출근 시간 통근, 비 오는 날 누수, 겨울 결로를 재확인하세요.</p></div><div class="plan-block"><span class="plan-index">04 / 동선</span><h3>토요일 광진·송정 / 일요일 송파</h3><p>광진: 구의 동서화운트빌 → 삼성하이빌B → 군자 동산골든빌라 → 중곡 147-67 → 송정 리안빌리지. 송파: 방이 선경베르빌 → 오금 정호하이츠빌라 → 가락 한결주택.</p></div></div></dialog>
-<div id="toast" role="status" aria-live="polite"></div><script src="app.js" defer></script></body></html>
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f6f4ef">
+  <meta name="description" content="서울 동부 실거주 매수 임장 체크리스트">
+  <title>임장 체크리스트 · 서울 동부 실거주</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#checklist">체크리스트로 바로가기</a>
+
+  <header class="top">
+    <div class="wrap">
+      <p class="eyebrow">서울 동부 · 실거주 매수</p>
+      <h1 class="title">임장 체크리스트</h1>
+      <p class="lede">현장에서 하나씩 눌러 확인하세요. 서두르지 않고, 빠짐없이.</p>
+    </div>
+  </header>
+
+  <div class="progress-bar-sticky" role="region" aria-label="전체 진행률">
+    <div class="wrap progress">
+      <div class="progress-meta">
+        <span class="progress-label">진행률</span>
+        <span id="progressText" class="progress-text" aria-live="polite">0 / 44</span>
+      </div>
+      <div class="progress-track" role="progressbar" aria-label="완료한 항목" aria-valuemin="0" aria-valuenow="0" aria-valuemax="44">
+        <div id="progressBar" class="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+    <nav class="jump" aria-label="섹션 바로가기">
+      <ol class="jump-list wrap">
+        <li><a href="#section-1">가기 전</a></li>
+        <li><a href="#section-2">동네</a></li>
+        <li><a href="#section-3">건물·주차</a></li>
+        <li><a href="#section-4">실내 공간</a></li>
+        <li><a href="#section-5">하자·수리</a></li>
+        <li><a href="#section-6">관리·계약</a></li>
+        <li><a href="#section-7">다시 확인</a></li>
+      </ol>
+    </nav>
+  </div>
+
+  <main class="wrap">
+    <div id="checklist" class="checklist" aria-label="임장 체크리스트"></div>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap">
+      <div class="save-note">
+        <span class="save-dot" aria-hidden="true"></span>
+        <p>체크 상태는 <strong>이 기기의 브라우저에만</strong> 저장됩니다. 서버로 전송되지 않으며, 다른 기기나 다른 브라우저와는 공유되지 않아요. 브라우저 데이터를 지우면 함께 사라집니다.</p>
+      </div>
+      <button id="resetButton" class="reset-button" type="button">체크 모두 초기화</button>
+      <p class="foot-meta">서울 동부 실거주 매수 임장용</p>
+    </div>
+  </footer>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
